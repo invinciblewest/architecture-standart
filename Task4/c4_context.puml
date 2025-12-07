@@ -1,0 +1,24 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(callcenter_op, "Оператор кол-центра")
+Person(partner_op, "Оператор партнёрского кол-центра")
+
+System(abs, "АБС (модуль ставок)", "Источник истины по ставкам")
+System(pub_svc, "Сервис публикации ставок", "Экспорт и доставка ставок")
+System(cc_sys, "Система кол-центра", "UI операторов, локальное хранилище ставок")
+System_Ext(partner_cc, "Партнёрский кол-центр", "Внешняя система, принимает только файлы")
+System(ib, "Интернет-банк", "Чтение актуальных ставок")
+System(site, "Сайт", "Чтение актуальных ставок")
+System(sms_gateway, "СМС-шлюз банка", "В контексте ADR не используется, показано для целостности")
+
+Rel(callcenter_op, cc_sys, "Просмотр ставок")
+Rel(partner_op, partner_cc, "Просмотр ставок из файла")
+Rel(abs, pub_svc, "Публикация справочника ставок")
+Rel(pub_svc, cc_sys, "Передача ставок", "HTTPS / pull")
+Rel(pub_svc, partner_cc, "Выгрузка файлов CSV/XLSX", "Файловый канал")
+Rel(pub_svc, ib, "Кэш/реплика ставок")
+Rel(pub_svc, site, "Кэш/реплика ставок")
+
+@enduml
+

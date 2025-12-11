@@ -1,0 +1,43 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+System_Boundary(deposits_mvp, "Deposits Online") {
+  Container(ib_web, "Интернет-банк (Web)", "ASP.NET MVC", "UI и API для заявок на депозиты")
+  ContainerDb(ib_db, "БД интернет-банка", "MS SQL", "Данные клиентов, заявки")
+  ContainerDb(ib_cache, "Кэш справочников", "Redis / In-memory", "Справочники и ставки для быстрого чтения")
+  Container(ib_sms, "Модуль СМС-подтверждения", "Сервис", "Отправка/проверка СМС-кода через шлюз банка")
+
+  Container(mq_svc, "Сервис заявок", "Java/.NET", "Антикоррупционный слой, публикация в очередь")
+  Container(message_queue, "Очередь сообщений", "Compatible MQ / Kafka Adapter", "Асинхронная обработка заявок")
+
+  Container(abs_module, "Модули АБС (заявки, ставки)", "PL/SQL/Delphi", "Обработка заявок и управление ставками")
+  ContainerDb(abs_db, "БД АБС", "Oracle", "Операционные данные, депозиты, ставки")
+
+  Container(site_web, "Сайт", "PHP/React", "Просмотр ставок и подача заявок")
+  Container(callcenter_sys, "Система кол-центра", "Java/Spring/React", "Приём заявок, статусы, работа операторов")
+
+  Container(sms_gateway, "СМС-шлюз банка", "Сервис", "Интеграция с телеком-оператором")
+}
+
+Person(customer_web, "Пользователь сайта")
+Person(customer_ib, "Пользователь интернет-банка")
+Person(callcenter_op, "Оператор кол-центра")
+Person(backoffice_mgr, "Менеджер бэк-офиса")
+
+Rel(customer_web, site_web, "HTTPS")
+Rel(site_web, callcenter_sys, "Заявка", "HTTPS")
+Rel(callcenter_op, callcenter_sys, "Обработка")
+Rel(customer_ib, ib_web, "HTTPS")
+Rel(ib_web, ib_sms, "Отправка/проверка СМС-кода")
+Rel(ib_web, ib_cache, "Чтение ставок/справочников")
+Rel(ib_web, ib_db, "Запись/чтение заявок")
+Rel(ib_web, mq_svc, "Заявка на депозит", "HTTPS")
+Rel(mq_svc, message_queue, "Публикация события")
+Rel(message_queue, abs_module, "Доставка событий")
+Rel(backoffice_mgr, abs_module, "Подтверждение условий, открытие депозита")
+Rel(abs_module, abs_db, "Операции с данными")
+Rel(abs_module, sms_gateway, "СМС: подтверждение ставки/открытия")
+Rel(callcenter_sys, sms_gateway, "СМС: уведомления сайта")
+
+@enduml
+

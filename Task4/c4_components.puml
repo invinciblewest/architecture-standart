@@ -1,0 +1,38 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+
+System_Boundary(rates_pub, "Rates Publication") {
+  Container(abs_module, "АБС: Модуль ставок", "PL/SQL", "Ведение/согласование ставок, аудит")
+  Container(abs_db, "Oracle", "База данных АБС", "Ставки и связанные данные")
+
+  Container(pub_service, "Сервис публикации ставок", "Java/.NET", "Антикоррупционный слой, экспорт, кэш/реплика, генерация файлов")
+  Container(cache_replica, "Кэш/Реплика ставок", "Redis/MS SQL", "Быстрое чтение ставок для каналов")
+  Container(file_gen, "Генератор файлов ставок", "Сервис", "CSV/XLSX с версией/датой/подписью")
+
+  Container(cc_system, "Система кол-центра", "Java/Spring/React", "Локальное хранилище ставок, UI операторов")
+  Container(cc_local_store, "Хранилище ставок (локально)", "PostgreSQL", "Актуальные ставки для операторов")
+
+  Container(partner_cc, "Партнёрский кол-центр", "Внешняя система", "Принимает только файлы CSV/XLSX")
+  Container(ib_web, "Интернет-банк", "ASP.NET MVC", "Чтение ставок из кэша/реплики")
+  Container(site_web, "Сайт", "PHP/React", "Чтение ставок из кэша/реплики")
+}
+
+Person(callcenter_op, "Оператор кол-центра")
+Person(partner_op, "Оператор партнёрского кол-центра")
+
+Rel(callcenter_op, cc_system, "Просмотр ставок")
+Rel(partner_op, partner_cc, "Просмотр файлов со ставками")
+
+Rel(abs_module, abs_db, "Чтение/запись ставок")
+Rel(abs_module, pub_service, "Публикация справочника ставок")
+Rel(pub_service, cache_replica, "Обновление кэша/реплики")
+Rel(pub_service, file_gen, "Генерация CSV/XLSX")
+Rel(file_gen, partner_cc, "Доставка файла", "Файловый канал (без API/SFTP)")
+Rel(pub_service, cc_system, "Передача ставок", "HTTPS/pull")
+Rel(cc_system, cc_local_store, "Сохранение актуальных ставок")
+Rel(ib_web, cache_replica, "Чтение ставок")
+Rel(site_web, cache_replica, "Чтение ставок")
+
+@enduml
+

@@ -1,0 +1,29 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(customer_web, "Пользователь сайта", "Просматривает ставки, отправляет заявку")
+Person(customer_ib, "Пользователь интернет-банка", "Выбирает счёт и сумму, подтверждает СМС-кодом")
+Person(callcenter_op, "Оператор кол-центра", "Обрабатывает заявки с сайта")
+Person(backoffice_mgr, "Менеджер бэк-офиса", "Подтверждает условия, открывает депозит в АБС")
+
+System(system_web, "Сайт", "Показывает ставки, принимает заявки")
+System(system_ib, "Интернет-банк", "Персональные ставки, заявки на депозит, СМС-подтверждение")
+System(system_mq, "Сервис заявок / Очередь", "Промежуточный слой, антикоррупционный слой, асинхронная обработка")
+System(system_abs, "АБС", "Обработка заявок, модуль ставок, создание депозитов")
+System(system_cc, "Система кол-центра", "Приём и обработка заявок с сайта, статусы")
+System(system_sms, "СМС-шлюз банка", "Отправка СМС уведомлений")
+System_Ext(system_telco, "Телеком-оператор", "Доставка СМС")
+
+Rel(customer_web, system_web, "HTTPS")
+Rel(customer_ib, system_ib, "HTTPS")
+Rel(system_web, system_cc, "Передача заявки", "HTTPS")
+Rel(callcenter_op, system_cc, "Работа с заявками")
+Rel(system_ib, system_mq, "Заявка на депозит", "HTTPS")
+Rel(system_mq, system_abs, "Асинхронная обработка", "Очередь / адаптер")
+Rel(backoffice_mgr, system_abs, "Подтверждение условий и создание депозита")
+Rel(system_cc, system_sms, "Уведомления по заявкам сайта")
+Rel(system_abs, system_sms, "СМС: подтверждение ставки/открытия")
+Rel(system_sms, system_telco, "Маршрутизация СМС")
+
+@enduml
+
